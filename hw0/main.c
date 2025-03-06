@@ -2,74 +2,89 @@
 #include <stdlib.h>
 #include <string.h>
 
-// 定義鏈結串列節點結構
+// 定義 linked list 節點
 typedef struct Node {
-    char character;
-    int value;       // ASCII值
+    char data;
+    int count;
     struct Node* next;
 } Node;
 
-// 新增節點到鏈結串列
-void addNode(Node** head, char c) {
-    // 建立新節點
-    Node* newNode = (Node*)malloc(sizeof(Node));
-    if (newNode == NULL) {
-        printf("記憶體分配失敗！\n");
-        exit(1);
+// 新增節點到 linked list
+Node* addNode(Node* head, char ch) {
+    // 忽略換行符和製表符
+    if (ch == '\n' || ch == '\t') {
+        return head;
     }
     
-    newNode->character = c;
-    newNode->value = (int)c;  // 取得字元的ASCII值
-    newNode->next = NULL;
-    
-    // 如果鏈結串列為空，新節點成為頭節點
-    if (*head == NULL) {
-        *head = newNode;
-        return;
-    }
-    
-    // 否則，找到最後一個節點並連接新節點
-    Node* current = *head;
-    while (current->next != NULL) {
+    Node* current = head;
+    Node* prev = NULL;
+
+    // 檢查是否字元已存在
+    while (current != NULL) {
+        if (current->data == ch) {
+            current->count++;
+            return head;
+        }
+        prev = current;
         current = current->next;
     }
-    
-    current->next = newNode;
+
+    // 如果字元不存在，新增新節點
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = ch;
+    newNode->count = 1;
+    newNode->next = NULL;
+
+    if (prev == NULL) {
+        return newNode;
+    } else {
+        prev->next = newNode;
+    }
+
+    return head;
 }
 
-// 輸出鏈結串列中的所有節點
+// 列印 linked list
 void printList(Node* head) {
     Node* current = head;
-    
     while (current != NULL) {
-        printf("%c : %d\n", current->character, current->value);
+        printf("%c : %d\n", current->data, current->count);
         current = current->next;
     }
-    printf("...........\n");
 }
 
-int main() {
-    Node* head = NULL;
-    char name[100];
-    
-    printf("請輸入你的名字: ");
-    scanf("%s", name);
-    
-    // 將每個字元添加到鏈結串列
-    for (int i = 0; i < strlen(name); i++) {
-        addNode(&head, name[i]);
-    }
-    
-    // 輸出鏈結串列
-    printList(head);
-    
-    // 釋放鏈結串列記憶體
+// 釋放 linked list 記憶體
+void freeList(Node* head) {
     Node* current = head;
     while (current != NULL) {
         Node* temp = current;
         current = current->next;
         free(temp);
     }
-    
+}
+
+int main() {
+    FILE *file = fopen(__FILE__, "r"); // 打開自身檔案
+    if (file == NULL) {
+        printf("無法開啟檔案\n");
+        return 1;
+    }
+
+    Node* head = NULL;
+    char ch;
+
+    // 逐字元讀取檔案內容
+    while ((ch = fgetc(file)) != EOF) {
+        head = addNode(head, ch);
+    }
+
+    fclose(file); // 關閉檔案
+
+    // 印出 linked list 內容
+    printList(head);
+
+    // 釋放記憶體
+    freeList(head);
+
     return 0;
 }
